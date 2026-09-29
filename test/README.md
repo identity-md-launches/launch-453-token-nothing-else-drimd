@@ -33,14 +33,24 @@ forge build --offline --out test/scratch/out --cache-path test/scratch/cache
 forge test --offline --out test/scratch/out --cache-path test/scratch/cache
 ```
 
+Revision verification with Foundry 1.8.3: the offline build passes, and the
+existing tests pass without changes. Forge reports 40 passing tests: 39 unit/fuzz
+tests and one grouped invariant campaign checking the three invariant functions
+above. That campaign executes 32,768 handler calls with no unexpected reverts or
+discarded calls. No concrete implementation defect or harness error was found
+that would justify rewriting the accepted suites.
+
 The supplied protected launch checks were separately run unchanged, with the
 compiled token, 7 decimals, the specified supply, and zero application contracts.
 Seven pass; the transfer check fails because it requires fee-free receipt.
 A gross transfer of `100000000000` minor units credits `95000000000` to the
 recipient and `5000000000` to the required fee address. This task/policy conflict
 is reported in `../.imd-findings.json` with a self-contained proof that was run
-and observed to fail. It requires upstream reconciliation; the passing token
-tests preserve the explicit 5% fee requirement.
+and observed to fail. This revision restores that missing report and reproduces
+the failure in both the standalone proof and the unchanged protected check.
+Scratch-only failing Solidity sources were removed after recording the proof so
+the delivered suite passes. The conflict requires upstream reconciliation;
+the passing token tests preserve the explicit 5% fee requirement.
 
 These local tests use no fork or deployed integration. Random sequences cover a
 bounded actor set and curated administrative selectors; they do not establish
