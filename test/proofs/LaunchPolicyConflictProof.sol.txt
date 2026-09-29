@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {Test} from "forge-std/Test.sol";
+import {LaunchToken} from "src/LaunchToken.sol";
+
+/// @dev Reproduces the supplied launch check, not the task's required fee semantics.
+contract LaunchPolicyConflictProof is Test {
+    function testProtectedTransferRequirementConflictsWithRequiredFee() public {
+        LaunchToken token = new LaunchToken();
+        uint256 supply = token.totalSupply();
+        uint256 gross = supply / 1_000;
+        address recipient = address(0xCAFE);
+
+        assertEq(supply, 100_000_000_000_000);
+        assertTrue(token.transfer(recipient, gross));
+        assertEq(token.balanceOf(address(this)), supply - gross);
+        assertEq(token.totalSupply(), supply);
+        // Token.protected.t.sol:141 requires the full gross amount at the recipient.
+        assertEq(token.balanceOf(recipient), gross, "recipient received a different amount");
+    }
+}
