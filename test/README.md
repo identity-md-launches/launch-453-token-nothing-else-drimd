@@ -48,11 +48,22 @@ recipient and `5000000000` to the required fee address. This task/policy conflic
 is reported in `../.imd-findings.json` as a medium-severity acceptance-policy
 conflict, with a self-contained proof that was run and observed to fail. The
 proof reproduces the protected requirement; it does not prescribe removing the
-task's required fee. The standalone reproduction command was:
+task's required fee. Restore the self-contained proof from the report before
+running it (the command intentionally fails against the current token):
 
 ```sh
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+report = json.loads(Path('.imd-findings.json').read_text())
+proof = Path('test/scratch/LaunchPolicyConflictProof.t.sol')
+proof.parent.mkdir(parents=True, exist_ok=True)
+proof.write_text(report['findings'][0]['proof'])
+PY
 forge test --offline --out test/scratch/out --cache-path test/scratch/cache \
   --match-path test/scratch/LaunchPolicyConflictProof.t.sol -vvv
+rm test/scratch/LaunchPolicyConflictProof.t.sol
 ```
 
 The proof source is embedded in the report's `proof` field. Both this proof and
