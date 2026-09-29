@@ -33,7 +33,7 @@ forge build --offline --out test/scratch/out --cache-path test/scratch/cache
 forge test --offline --out test/scratch/out --cache-path test/scratch/cache
 ```
 
-Revision verification with Foundry 1.8.3: the offline build passes, and the
+Revision verification (2026-09-29) with Foundry 1.8.3: the offline build passes, and the
 existing tests pass without changes. Forge reports 40 passing tests: 39 unit/fuzz
 tests and one grouped invariant campaign checking the three invariant functions
 above. That campaign executes 32,768 handler calls with no unexpected reverts or
@@ -45,9 +45,19 @@ compiled token, 7 decimals, the specified supply, and zero application contracts
 Seven pass; the transfer check fails because it requires fee-free receipt.
 A gross transfer of `100000000000` minor units credits `95000000000` to the
 recipient and `5000000000` to the required fee address. This task/policy conflict
-is reported in `../.imd-findings.json` with a self-contained proof that was run
-and observed to fail. This revision restores that missing report and reproduces
-the failure in both the standalone proof and the unchanged protected check.
+is reported in `../.imd-findings.json` as a medium-severity acceptance-policy
+conflict, with a self-contained proof that was run and observed to fail. The
+proof reproduces the protected requirement; it does not prescribe removing the
+task's required fee. The standalone reproduction command was:
+
+```sh
+forge test --offline --out test/scratch/out --cache-path test/scratch/cache \
+  --match-path test/scratch/LaunchPolicyConflictProof.t.sol -vvv
+```
+
+The proof source is embedded in the report's `proof` field. Both this proof and
+the unchanged protected transfer check fail with
+`recipient received a different amount: 95000000000 != 100000000000`.
 Scratch-only failing Solidity sources were removed after recording the proof so
 the delivered suite passes. The conflict requires upstream reconciliation;
 the passing token tests preserve the explicit 5% fee requirement.
